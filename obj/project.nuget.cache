@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Y6JfNEpdDmBs6GhFjhsu1JcxWKew/cwgSfQpIE7KHZimUzEZAjdkwDwErOOLHKdZ9n20wDs0uRkzz2eJQCitXA==",
+  "dgSpecHash": "3pEzGT5bQo0JNTcLm63a3fqojWEV1fvZ+Leu6SWg7BskkPVhf+S7D4VXSWuC6o4oyxzrg/nbzYlT9RpirVw+jA==",
   "success": true,
-  "projectFilePath": "/Users/aaron/Desktop/test-server/test.csproj",
+  "projectFilePath": "/Users/declan/Documents/echo/server/test.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
