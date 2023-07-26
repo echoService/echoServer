@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/declan/Documents/echo/server/test.csproj": {}
+    "/Users/declan/Desktop/MyFile/server/test.csproj": {}
   },
   "projects": {
-    "/Users/declan/Documents/echo/server/test.csproj": {
+    "/Users/declan/Desktop/MyFile/server/test.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/declan/Documents/echo/server/test.csproj",
+        "projectUniqueName": "/Users/declan/Desktop/MyFile/server/test.csproj",
         "projectName": "test",
-        "projectPath": "/Users/declan/Documents/echo/server/test.csproj",
+        "projectPath": "/Users/declan/Desktop/MyFile/server/test.csproj",
         "packagesPath": "/Users/declan/.nuget/packages/",
-        "outputPath": "/Users/declan/Documents/echo/server/obj/",
+        "outputPath": "/Users/declan/Desktop/MyFile/server/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/declan/.nuget/NuGet/NuGet.Config"
