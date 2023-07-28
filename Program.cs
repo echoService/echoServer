@@ -53,36 +53,43 @@ namespace Sock_console_server
             {
                 // 데이터를 받아서 저장할 MemoryStream 객체 생성
                 MemoryStream memoryStream = new MemoryStream();
+                int readPosition = 0;
+                int writePosition = 0;
 
                 while (client.Connected)
                 {
                     // 클라이언트로부터 데이터를 수신하여 MemoryStream에 추가
                     byte[] buffer = new byte[1024];
                     int receivedBytes = await client.ReceiveAsync(buffer, SocketFlags.None);
+                    Console.WriteLine(receivedBytes);
                     if (receivedBytes == 0)
                         break;
-
+                    memoryStream.Position = writePosition;
                     memoryStream.Write(buffer, 0, receivedBytes);
+                    writePosition += receivedBytes;
 
                     // 데이터를 처리하는 로직
                     while (true)
                     {
                         // 데이터 길이를 읽어옴
                         memoryStream.Position = 0;
-                        Console.WriteLine("========== 메모리 스트림 길이는 {0} 입니다.", memoryStream.Length);
                         if (memoryStream.Length < 4)
                             break;
 
                         byte[] lengthBytes = new byte[4];
                         memoryStream.Read(lengthBytes, 0, 4);
                         int length = BitConverter.ToInt32(lengthBytes, 0);
+                        Console.WriteLine("========================================= {0}", length);
 
                         // 데이터가 모두 도착했는지 확인
                         if (memoryStream.Length < (length + 4))
+                        {
                             break;
+                        }
 
                         // 실제 데이터를 읽어옴
-                        memoryStream.Position = 4;
+                        readPosition += 4;
+                        memoryStream.Position = readPosition;
                         byte[] dataBytes = new byte[length];
                         memoryStream.Read(dataBytes, 0, length);
 
@@ -101,7 +108,8 @@ namespace Sock_console_server
                         if (remainingLength > 0)
                         {
                             byte[] remainingData = new byte[remainingLength];
-                            memoryStream.Position = length + 4;
+                            readPosition += length;
+                            memoryStream.Position = readPosition;
                             memoryStream.Read(remainingData, 0, (int)remainingLength);
 
                             // 남은 데이터를 메모리 내에서 이동
@@ -110,10 +118,16 @@ namespace Sock_console_server
 
                             // MemoryStream의 길이를 조정하여 남은 데이터를 삭제
                             memoryStream.SetLength(remainingLength);
+                            
+                            readPosition = 0;
+                            writePosition = 0;
                         }
                         else
                         {
                             memoryStream.SetLength(0);
+                            
+                            readPosition = 0;
+                            writePosition = 0;
                         }
                     }
                 }
