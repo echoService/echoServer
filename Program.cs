@@ -8,15 +8,8 @@ using System.Threading.Tasks;
 
 namespace Sock_console_server
 {
-    // 서버의 흐름: 소켓 생성 -> bind()로 소켓에 주소 할당 -> Socket이 연결 시도를 수신하는 상태가 되도록 Listen()으로 변경 -> Socket이 요청을 수락하도록 while문을 통해 accept()를 반복 -> Socket이 연결되면 StreamWriter 객체 생성 후 리스트에 넣음 -> 이후 메세지 주고 받기
-    // struct / class 의 차이점.
-    //   value type: 복사값으로 넘어감.
-    //   class type: 레퍼런스로 넘어감.
-    // Boxing / UnBoxing
-
     class Program
     {
-        private static List<object> _list = new ();
         private static List<Socket> clients = new List<Socket>();
 
         static void Main(string[] args)
@@ -33,20 +26,18 @@ namespace Sock_console_server
                 // socket에 클라이언트가 접근할 수 있도록 설정
                 socket.Listen();
                 Console.WriteLine("Listener 동작 시작");
-                
+
                 while (true)
                 {
                     // 클라이언트의 요청을 승인하여 메세지 송수신 준비
                     Socket client = socket.Accept();
                     Console.WriteLine("클라이언트의 연결 대기 및 수락");
 
-                    var buffer = new Memory<byte>(new byte[1024]);
-                    ValueTask<int> receive = socket.ReceiveAsync(buffer);
-                    
-                    // 서버로 데이터가 들어왔을 때 모든 참가자들에게 메세지를 전달하기 위해 StreamWriter를 List에 담음
+                    // 서버로 데이터가 들어왔을 때 모든 참가자들에게 메세지를 전달하기 위해 리스트에 담음
                     clients.Add(client);
 
                     // 클라이언트를 메인 스레드와 다른 별도의 스레드로 처리
+                    Console.WriteLine("메세지 핸들링 시작");
                     Task.Run(() => HandleClient(client));
                 }
             }
@@ -58,54 +49,78 @@ namespace Sock_console_server
 
         static async Task HandleClient(Socket client)
         {
-            // 버퍼 메모리 설정
-            var buffer = new Memory<byte>(new byte[1024]);
-            string nickname = "예비닉네임";
-
-            // 스트림에 처음 들어온 문자열은 닉네임으로 지정
-            while (nickname == "예비닉네임")
-            {
-                int receivedBytes = await client.ReceiveAsync(buffer);
-                nickname = Encoding.UTF8.GetString(buffer.Span.Slice(0, receivedBytes));
-            }
-            
-            // List에 담긴 StreamWriter들 각각 입장 알림 전송
-            foreach (var socket in clients)
-            {
-                string welcomeMessage = string.Format("{0}님이 채팅방에 입장하셨습니다.", nickname);
-                buffer = Encoding.UTF8.GetBytes(welcomeMessage);
-                await socket.SendAsync(buffer);
-            }
-
             try
             {
+                // 데이터를 받아서 저장할 MemoryStream 객체 생성
+                MemoryStream memoryStream = new MemoryStream();
+
                 while (client.Connected)
                 {
-                    int receivedBytes = await client.ReceiveAsync(buffer);
+                    // 클라이언트로부터 데이터를 수신하여 MemoryStream에 추가
+                    byte[] buffer = new byte[1024];
+                    int receivedBytes = await client.ReceiveAsync(buffer, SocketFlags.None);
                     if (receivedBytes == 0)
                         break;
 
-                    Console.WriteLine("클라이언트로부터 메시지 읽기");
+                    memoryStream.Write(buffer, 0, receivedBytes);
 
-                    string getMessage = Encoding.UTF8.GetString(buffer.Span.Slice(0, receivedBytes));
-                    string formattedMessage = string.Format("{0}: {1} - {2}", nickname, getMessage, DateTime.Now.ToString("HH:mm:ss"));
-
-                    foreach (var socket in clients)
+                    // 데이터를 처리하는 로직
+                    while (true)
                     {
-                        // String을 바이트 코드로 변환
-                        byte[] formattedBuffer = Encoding.UTF8.GetBytes(formattedMessage);
-                        // 변환된 바이트 코드를 보내준다
-                        await socket.SendAsync(formattedBuffer);
-                    }
+                        // 데이터 길이를 읽어옴
+                        memoryStream.Position = 0;
+                        Console.WriteLine("========== 메모리 스트림 길이는 {0} 입니다.", memoryStream.Length);
+                        if (memoryStream.Length < 4)
+                            break;
 
-                    Console.WriteLine("클라이언트에게 메시지 보내기");
-                    Console.WriteLine("버퍼의 내용을 클라이언트로 보냄");
-                    Console.WriteLine(formattedMessage);
+                        byte[] lengthBytes = new byte[4];
+                        memoryStream.Read(lengthBytes, 0, 4);
+                        int length = BitConverter.ToInt32(lengthBytes, 0);
+
+                        // 데이터가 모두 도착했는지 확인
+                        if (memoryStream.Length < (length + 4))
+                            break;
+
+                        // 실제 데이터를 읽어옴
+                        memoryStream.Position = 4;
+                        byte[] dataBytes = new byte[length];
+                        memoryStream.Read(dataBytes, 0, length);
+
+                        // 바이트 데이터를 문자열로 디코딩하여 콘솔에 표시
+                        string message = Encoding.UTF8.GetString(dataBytes);
+                        Console.WriteLine("Received: " + message);
+
+                        // 처리한 데이터를 다시 클라이언트에 전송
+                        foreach (var socket in clients)
+                        {
+                            socket.Send(dataBytes);
+                        }
+
+                        // 처리한 데이터는 MemoryStream에서 제거
+                        long remainingLength = memoryStream.Length - (length + 4);
+                        if (remainingLength > 0)
+                        {
+                            byte[] remainingData = new byte[remainingLength];
+                            memoryStream.Position = length + 4;
+                            memoryStream.Read(remainingData, 0, (int)remainingLength);
+
+                            // 남은 데이터를 메모리 내에서 이동
+                            byte[] innerBuffer = memoryStream.GetBuffer();
+                            Buffer.BlockCopy(remainingData, 0, innerBuffer, 0, (int)remainingLength);
+
+                            // MemoryStream의 길이를 조정하여 남은 데이터를 삭제
+                            memoryStream.SetLength(remainingLength);
+                        }
+                        else
+                        {
+                            memoryStream.SetLength(0);
+                        }
+                    }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine(e);
             }
             finally
             {

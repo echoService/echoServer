@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/declan/Desktop/MyFile/server/test.csproj",
+      "projectUniqueName": "/Users/declan/Desktop/Last/Server/test.csproj",
       "projectName": "test",
-      "projectPath": "/Users/declan/Desktop/MyFile/server/test.csproj",
+      "projectPath": "/Users/declan/Desktop/Last/Server/test.csproj",
       "packagesPath": "/Users/declan/.nuget/packages/",
-      "outputPath": "/Users/declan/Desktop/MyFile/server/obj/",
+      "outputPath": "/Users/declan/Desktop/Last/Server/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/declan/.nuget/NuGet/NuGet.Config"
