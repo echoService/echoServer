@@ -51,32 +51,39 @@ namespace Sock_console_server
         {
             try
             {
-                // 데이터를 받아서 저장할 MemoryStream 객체 생성
+                // 메모리를 직접 컨트롤하기 위한 MemoryStream 객체 생성
                 MemoryStream memoryStream = new MemoryStream();
+                // memoryStream의 offset을 컨트롤하기 위해서 read / writer용 포지션 변수 선언
                 int readPosition = 0;
                 int writePosition = 0;
 
+                // 클라이언트 소켓과 연결되어 있는 동안 무한 루프
                 while (client.Connected)
                 {
-                    // 클라이언트로부터 데이터를 수신하여 MemoryStream에 추가
+                    // 전달 받은 데이터를 담을 buffer 메모리 할당
                     byte[] buffer = new byte[1024];
+                    // 클라이언트로부터 전달받은 데이터의 길이를 저장하는 receivedBytes 변수 초기화
                     int receivedBytes = await client.ReceiveAsync(buffer, SocketFlags.None);
                     Console.WriteLine(receivedBytes);
                     if (receivedBytes == 0)
                         break;
+                    // 데이터를 옮기기 위해서 Offset 변경 및 buffer 메모리에 데이터 저장
                     memoryStream.Position = writePosition;
                     memoryStream.Write(buffer, 0, receivedBytes);
+                    // write용 포지션 데이터 변경
                     writePosition += receivedBytes;
 
-                    // 데이터를 처리하는 로직
+                    // 무한 반복
                     while (true)
                     {
-                        // 데이터 길이를 읽어옴
-                        memoryStream.Position = 0;
+                        // 데이터를 다시 읽기 위해 Offset 변경
+                        memoryStream.Position = readPosition;
                         if (memoryStream.Length < 4)
                             break;
 
+                        // 정수(4바이트)를 읽기 위해 lengthBytes 변수에 메모리 할당
                         byte[] lengthBytes = new byte[4];
+                        // 실제 데이터가 몇 글자인지 확인 후 length 변수에 정수값으로 저장
                         memoryStream.Read(lengthBytes, 0, 4);
                         int length = BitConverter.ToInt32(lengthBytes, 0);
                         Console.WriteLine("========================================= {0}", length);
@@ -87,27 +94,33 @@ namespace Sock_console_server
                             break;
                         }
 
-                        // 실제 데이터를 읽어옴
+                        // 실제 데이터를 읽어오기 위해 Offset 값 변경
                         readPosition += 4;
                         memoryStream.Position = readPosition;
+                        // 실제 길이 만큼 데이터 할당
                         byte[] dataBytes = new byte[length];
                         memoryStream.Read(dataBytes, 0, length);
 
-                        // 바이트 데이터를 문자열로 디코딩하여 콘솔에 표시
+                        // 바이트 데이터를 문자열로 역직렬화 해서 변수에 저장
                         string message = Encoding.UTF8.GetString(dataBytes);
                         Console.WriteLine("Received: " + message);
 
-                        // 처리한 데이터를 다시 클라이언트에 전송
+                        // 처리한 데이터를 연결된 모든 Socket에게 전달
+                        // 클라이언트 측에서도 동일한 작업을 수행할 수 있게 길이와 실제 데이터값을 나눠숴 전달해줌
                         foreach (var socket in clients)
                         {
+                            socket.Send(lengthBytes);
                             socket.Send(dataBytes);
                         }
 
-                        // 처리한 데이터는 MemoryStream에서 제거
+                        // 뒤에 남아있는 데이터가 있을 수 있음으로 확인하는 절차 필요 -> memoryStream의 전체 길이에서 현재까지 읽어온 데이터의 길이를 비교
                         long remainingLength = memoryStream.Length - (length + 4);
+                        // 남아있는 데이터가 있다면 if문 실행
                         if (remainingLength > 0)
                         {
+                            // 남아있는 데이터 만큼 메모리 할당
                             byte[] remainingData = new byte[remainingLength];
+                            // Offset 변경을 위해 readPosition 변수값 변경
                             readPosition += length;
                             memoryStream.Position = readPosition;
                             memoryStream.Read(remainingData, 0, (int)remainingLength);
@@ -118,9 +131,6 @@ namespace Sock_console_server
 
                             // MemoryStream의 길이를 조정하여 남은 데이터를 삭제
                             memoryStream.SetLength(remainingLength);
-                            
-                            readPosition = 0;
-                            writePosition = 0;
                         }
                         else
                         {
