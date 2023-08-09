@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qPPo4inUoZ2pEZ/mzr3EialHFHvZBHbLFUp+pEeYBj/EZaCQbSBZT1K8eq6wruBmPv4ZhAkoTMEqraA6glKcvQ==",
+  "dgSpecHash": "S1RH6sCOUwi+SRQT6iEk/wKXKAug47pHk8An95ZZ8+2QGA/05XpqegTBwCvCUryimW4WJ6EiGvh+fvFkogabog==",
   "success": true,
-  "projectFilePath": "/Users/declan/Desktop/깃허브 업로드용/server/test.csproj",
+  "projectFilePath": "/Users/declan/Desktop/echoService/echo/echoServer/echoServer.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

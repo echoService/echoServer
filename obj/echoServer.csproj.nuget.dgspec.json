@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/declan/Desktop/깃허브 업로드용/server/test.csproj": {}
+    "/Users/declan/Desktop/echoService/echo/echoServer/echoServer.csproj": {}
   },
   "projects": {
-    "/Users/declan/Desktop/깃허브 업로드용/server/test.csproj": {
+    "/Users/declan/Desktop/echoService/echo/echoServer/echoServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/declan/Desktop/깃허브 업로드용/server/test.csproj",
-        "projectName": "test",
-        "projectPath": "/Users/declan/Desktop/깃허브 업로드용/server/test.csproj",
+        "projectUniqueName": "/Users/declan/Desktop/echoService/echo/echoServer/echoServer.csproj",
+        "projectName": "echoServer",
+        "projectPath": "/Users/declan/Desktop/echoService/echo/echoServer/echoServer.csproj",
         "packagesPath": "/Users/declan/.nuget/packages/",
-        "outputPath": "/Users/declan/Desktop/깃허브 업로드용/server/obj/",
+        "outputPath": "/Users/declan/Desktop/echoService/echo/echoServer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/declan/.nuget/NuGet/NuGet.Config"
